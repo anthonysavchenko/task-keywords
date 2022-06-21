@@ -20,10 +20,6 @@ const LINE_ELEMENTS_SEPARATOR = ",";
         h1, h2 {
             text-align: center;
         }
-        li > div {
-            display: inline-block;
-            padding: 0 3px 0;
-        }
         form {
             display: flex;
             flex-direction: column;
@@ -43,19 +39,9 @@ const LINE_ELEMENTS_SEPARATOR = ",";
             <h2>Результат</h2>
             <ol>
                 <?php
-                    foreach(getPhrases($source) as $line) {
+                    foreach(getPhrases($source) as $phrase) {
                         ?>
-                        <li>
-                            <?php
-                                foreach($line as $phrase) {
-                                    ?>
-                                    <div>
-                                        <?= $phrase ?>
-                                    </div>
-                                    <?php
-                                }
-                            ?>
-                        </li>
+                        <li><?= $phrase ?></li>
                         <?php
                     };
                 ?>
@@ -84,6 +70,7 @@ function getPhrases(string $source): array
 {
     $keywords = explodeToKeywords($source);
     $phrases = combineKeywordsToPhrases($keywords);
+    $phrases = shiftMinusWords($phrases);
 
     return $phrases;
 }
@@ -96,7 +83,7 @@ function getPhrases(string $source): array
  * ```
  * [
  *      ["Honda", "Honda CRF", "Honda CRF-450X"],
- *      ["Владивосток", "Приморский край -Владивосток"],
+ *      ["Владивосток", "Приморский край -Владивосток"]
  * ]
  * ```
  */
@@ -119,24 +106,32 @@ function explodeToKeywords(string $text): array
  * @return array Например:
  * ```
  * [
- *      ["Honda", "Honda CRF", "Honda CRF-450X"],
- *      ["Владивосток", "Приморский край -Владивосток"],
+ *      "Honda Владивосток",
+ *      "Honda Приморский край -Владивосток",
+ *      "Honda CRF Владивосток",
+ *      "Honda CRF Приморский край -Владивосток",
+ *      "Honda CRF-450X Владивосток",
+ *      "Honda CRF-450X Приморский край -Владивосток"
  * ]
  * ```
  */
 function combineKeywordsToPhrases(array $keywords): array
 {
     $phrases = [];
-    foreach ($keywords as $line) {
+    foreach($keywords as $line) {
         $phrases = combinePhrasesWithLine($phrases, $line);
     }
-    return $phrases;
+    $words = [];
+    foreach($phrases as $phrase) {
+        $words[] = implode(" ", $phrase);
+    }
+    return $words;
 }
 
 /**
  * Комбинирует фразы с одним набором ключевых слов (очередным)
  * 
- * @param array $phrases Набор уже составленных фраз @see combineKeywordsToPhrases. Или null,
+ * @param array $phrases Набор уже составленных фраз. @see combineKeywordsToPhrases. Или null,
  * если фраз еще не было составлено
  * @param array $line Набор ключевых слов
  * @return array Например:
@@ -144,11 +139,11 @@ function combineKeywordsToPhrases(array $keywords): array
  * [
  *      ["Honda", "Владивосток"],
  *      ["Honda CRF", "Владивосток"],
- *      ["Honda CRF-450X", "Владивосток"],
+ *      ["Honda CRF-450X", "Владивосток"]
  * ]
  * ```
  */
-function combinePhrasesWithLine(array $phrases, array $line): array
+function combinePhrasesWithLine(?array $phrases, array $line): array
 {
     $combination = [];
     if (count($phrases) === 0) {
@@ -163,6 +158,30 @@ function combinePhrasesWithLine(array $phrases, array $line): array
         }
     }
     return $combination;
+}
+
+/**
+ * Сдвигает минус-слова в конец фраз
+ * 
+ * @param $phrases Фразы. @see combineKeywordsToPhrases
+ * @return array
+ */
+function shiftMinusWords(array $phrases): array
+{
+    $shifted = [];
+    foreach($phrases as $phrase) {
+        $noMinusWordsPart = [];
+        $minusWordsPart = [];
+        foreach(explode(" ", $phrase) as $keyword) {
+            if (substr($keyword, 0, 1) === '-') {
+                $minusWordsPart[] = $keyword;
+            } else {
+                $noMinusWordsPart[] = $keyword;
+            }
+        }
+        $shifted[] = implode(" ", [...$noMinusWordsPart, ...$minusWordsPart]);
+    }
+    return $shifted;
 }
 
 ?>
