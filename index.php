@@ -12,6 +12,13 @@ const FORBIDDEN_CHARS = "/[^[:alnum:][:space:]]/u";
 /** Символ-оператор, который ставится перед минус-словом */
 const MINUS_WORD_OPERATOR = "-";
 
+/** Максимальное количество символов в слове,
+ * при котором оно обязательно должно быть выделено оператором для коротких слов */
+const MAX_CHAR_COUNT_FOR_SHORT_WORD = 2;
+
+/** Символ-оператор, который ставится перед коротким словом */
+const PLUS_WORD_OPERATOR = "+";
+
 /** Символы-операторы, которые можно использовать в начале ключевого слова  */
 const ALLOWED_OPERATOR_CHARS = MINUS_WORD_OPERATOR . "+!";
 
@@ -108,6 +115,9 @@ function getPhrases(string $source): array
     /* В исходных словах не должно присутствовать знаков препинания кроме: !,+,- один знак в начале слова.
     Невалидные символы нужно заменить пробелами */
     $phrases = removeForbiddenChars($phrases);
+
+    /* Короткие исходные слова (до 2х символов) должны начинаться с + */
+    $phrases = addPluses($phrases);
 
     /* Слова с минусами (минус-слова) должны располагаться в конце фразы */
     $phrases = shiftMinusWords($phrases);
@@ -268,6 +278,28 @@ function removeExtraSpaces(string $target): string
 }
 
 /**
+ * Выделяет короткие слова специальным символом-оператором, если они еще не выделены
+ * 
+ * @param array $phrases Фразы. @see combineKeywordsToPhrases
+ * @return array Фразы
+ */
+function addPluses(array $phrases): array
+{
+    $phrasesAfterAdd = [];
+    foreach ($phrases as $phrase) {
+        $phraseAfterAdd = [];
+        $keywords = explode(" ", $phrase);
+        foreach ($keywords as $keyword) {
+            $phraseAfterAdd[] = (
+                strlen($keyword) <= MAX_CHAR_COUNT_FOR_SHORT_WORD && !isPlusWord($keyword) ? "+" : ""
+            ) . $keyword;
+        }
+        $phrasesAfterAdd[] = implode(" ", $phraseAfterAdd);
+    }
+    return $phrasesAfterAdd;
+}
+
+/**
  * Сдвигает минус-слова в конец фраз
  * 
  * @param $phrases Фразы. @see combineKeywordsToPhrases
@@ -358,6 +390,17 @@ function getNoMinusWordsPhrase(array $phrase): array
 function isMinusWord(string $target): bool
 {
     return substr($target, 0, 1) === MINUS_WORD_OPERATOR;
+}
+
+/**
+ * Проверяет, назодится ли в начале строки плюс-оператор
+ * 
+ * @param string $target Исходная строка
+ * @return string Итоговая строка
+ */
+function isPlusWord(string $target): bool
+{
+    return substr($target, 0, 1) === PLUS_WORD_OPERATOR;
 }
 
 ?>
