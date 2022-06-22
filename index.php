@@ -128,8 +128,13 @@ function getPhrases(string $source): array
     будем считать, что необходимо удалить повторяющиеся слова и минус-слова во фразе, а также отбрасывать фразы с
     таким набором слов, который полностью совпадает с набором слов в другой фразе (при этом минус-слова никак не
     учитываются). Также если во фразе пересекается набор слов и минус-слов, то отбрасываем ее */
-    /* Порядок слов не важен (в рамках тестового задания) */
+    /* Порядок слов не важен (в рамках тестового задания). В рамках решения удалось сохранить порядок */
     $phrases = removeDuplicates($phrases);
+
+    /* Фразы не должны конкурировать, т.е. пересекаться по ключам. Судя по всему, тут имеется ввиду не просто
+    пересечение по словам, а именно полное включение набора слов одной из фраз (без учета минус-слов) в другую.
+    Потому что, если фразы просто пересекаются, но имеют и некоторые различные слова, то они конкурировать не будут */
+    $phrases = addMinuses($phrases);
 
     return $phrases;
 }
@@ -393,7 +398,7 @@ function isMinusWord(string $target): bool
 }
 
 /**
- * Проверяет, назодится ли в начале строки плюс-оператор
+ * Проверяет, находится ли в начале строки плюс-оператор
  * 
  * @param string $target Исходная строка
  * @return string Итоговая строка
@@ -401,6 +406,84 @@ function isMinusWord(string $target): bool
 function isPlusWord(string $target): bool
 {
     return substr($target, 0, 1) === PLUS_WORD_OPERATOR;
+}
+
+/**
+ * Разминусовывает фразы, если одна из них включает другую
+ * 
+ * @param $phrases Фразы. @see combineKeywordsToPhrases
+ * @return array Фразы
+ */
+function addMinuses(array $phrases): array
+{
+    $phrasesAfterAdd = [];
+    foreach ($phrases as $phrase) {
+        $phraseAfterAdd = $phrase;
+        $keywords = explode(" ", $phrase);
+        $noMinusWordsPhrase = getNoMinusWordsPhrase($keywords);
+        foreach (array_keys($phrasesAfterAdd) as $key) {
+            $keyAsArray = explode(" ", $key);
+
+            /* Текущая фраза включает в себя одну из уже обработанных,
+            поэтому добавляем в обработанную фразу минус-слова */
+            if (!array_diff($keyAsArray, $noMinusWordsPhrase)) {
+                $phrasesAfterAdd[$key] = implode(" ", addMinusWords(
+                    $noMinusWordsPhrase,
+                    $keyAsArray,
+                    explode(" ", $phrasesAfterAdd[$key])
+                ));
+            }
+            
+            /* Одна из уже обработанных фраз включает в себя текущую,
+            поэтому добавляем в текущую фразу минус-слова */
+            else if (!array_diff($noMinusWordsPhrase, $keyAsArray)) {
+                $phraseAfterAdd = implode(" ", addMinusWords(
+                    $keyAsArray,
+                    $noMinusWordsPhrase,
+                    explode(" ", $phraseAfterAdd)
+                ));
+            }
+        }
+        $phrasesAfterAdd[implode(" ", $noMinusWordsPhrase)] = $phraseAfterAdd;
+    }
+    return $phrasesAfterAdd;
+}
+
+/**
+ * Добовляет во фразу минус-слова для разминусовки с другой фразой
+ * 
+ * @param array $noMinusWordsSourceArray Слова без минус-слов фразы, из которой будут формироваться минус-слова
+ * @param array $noMinusWordsTargetArray Слова без минус-слов фразы, в которую будут добавляться минус-слова
+ * @param array $allWordsTargetArray Всее слова фразы, в которую будут добавляться минус-слова
+ * @return array Фраза с нужными минус-словами
+ */
+function addMinusWords(
+    array $noMinusWordsSourceArray,
+    array $noMinusWordsTargetArray,
+    array $allWordsTargetArray
+): array {
+    $diff = array_diff($noMinusWordsSourceArray, $noMinusWordsTargetArray);
+    $diff = transformWordsToMinusWords($diff);
+    $noMinusWords = getNoMinusWordsPhrase($allWordsTargetArray);
+    $minusWords = getMinusWordsPhrase($allWordsTargetArray);
+    return [...$noMinusWords, ...$minusWords, ...array_diff($diff, $minusWords)];
+}
+
+/**
+ * Преобразует набор слов в набор минус-слов
+ * 
+ * @param array $words Исходный набор слов
+ * @return array Итоговый набор слов
+ */
+function transformWordsToMinusWords(array $words): array
+{
+    return array_map(function (string $word) {
+        $first_char = substr($word, 0, 1);
+        if (strpos(ALLOWED_OPERATOR_CHARS, $first_char) > -1) {
+            return MINUS_WORD_OPERATOR . substr($word, 1);
+        }
+        return "-" . $word;
+    }, $words);
 }
 
 ?>
