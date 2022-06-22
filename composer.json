@@ -1,0 +1,10 @@
+{
+    "name": "anthony-savchenko/task-keywords",
+    "config": {
+        "platform": {
+            "php": "7.4"
+        }
+    },
+    "require": {
+    }
+} 
