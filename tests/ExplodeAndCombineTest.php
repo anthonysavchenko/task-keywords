@@ -30,7 +30,7 @@ class ExplodeAndCombineTest extends TestCase
     /**
      * Проверяет входные данные в виде пустой строк
      */
-    public function testEmptyInput()
+    public function testEmptyString()
     {
         $this->assertEqualsCanonicalizing(
             KG::combineKeywordsToPhrases(
@@ -42,7 +42,7 @@ class ExplodeAndCombineTest extends TestCase
     /**
      * Проверяет входные данные в виде одной строки
      */
-    public function testOneStringInput()
+    public function testOneString()
     {
         $this->assertEqualsCanonicalizing(
             KG::combineKeywordsToPhrases(

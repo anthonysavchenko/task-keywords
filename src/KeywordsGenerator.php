@@ -287,7 +287,7 @@ class KeywordsGenerator
                     $phraseAfterRemove[] = $keyword;
                 }
             }
-            if (count($phraseAfterRemove) > 0) {
+            if ($phraseAfterRemove) {
 
                 /* Отбрасываем фразу, если набор ее слов совпадает с набором слов в одной из уже обработанных фраз */
                 $noMinusWordsPhrase = self::getNoMinusWordsPhrase($phraseAfterRemove);
