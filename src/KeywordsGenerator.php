@@ -387,7 +387,7 @@ class KeywordsGenerator
             }
             $phrasesAfterAdd[implode(" ", $noMinusWordsPhrase)] = $phraseAfterAdd;
         }
-        return $phrasesAfterAdd;
+        return array_values($phrasesAfterAdd);
     }
 
     /**
