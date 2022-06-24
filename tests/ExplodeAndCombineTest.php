@@ -28,7 +28,7 @@ class ExplodeAndCombineTest extends TestCase
     }
 
     /**
-     * Проверяет входные данные в виде пустой строк
+     * Проверяет входные данные в виде пустой строки
      */
     public function testEmptyString()
     {

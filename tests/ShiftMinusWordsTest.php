@@ -13,7 +13,7 @@ class ShiftMinusWordsTest extends TestCase
     /**
      * Выполняет простой первый тест
      */
-    public function testRemove()
+    public function testShiftMinusWords()
     {
         $this->assertEqualsCanonicalizing(
             KG::shiftMinusWords([
@@ -27,7 +27,7 @@ class ShiftMinusWordsTest extends TestCase
     }
 
     /**
-     * Проверяет входные данные в виде пустой строк
+     * Проверяет входные данные в виде пустой строки
      */
     public function testEmptyString()
     {

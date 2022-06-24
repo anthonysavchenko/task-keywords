@@ -13,7 +13,7 @@ class AddPlusesTest extends TestCase
     /**
      * Выполняет простой первый тест
      */
-    public function testRemove()
+    public function testAddPlises()
     {
         $this->assertEqualsCanonicalizing(
             KG::addPluses([
@@ -27,7 +27,7 @@ class AddPlusesTest extends TestCase
     }
 
     /**
-     * Проверяет входные данные в виде пустой строк
+     * Проверяет входные данные в виде пустой строки
      */
     public function testEmptyString()
     {
